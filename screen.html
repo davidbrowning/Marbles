@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<script type="text/javascript" src="https://www.airconsole.com/api/airconsole-1.3.0.js"></script>
+	<meta charset="UTF-8">
+	<title>Marbles</title>
+
+<style>
+	canvas {
+		border: 4px solid #666;
+		position: absolute;
+		margin: auto;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: #272727;
+	}
+	#turn {
+		color:white;
+	}
+</style>
+
+<script>
+
+var canvas, context;
+var airconsole;
+var data;
+var playerBlue;
+var player = 1;
+var occupiedSpaces = [];
+
+function setupConsole() {
+        airconsole = new AirConsole();
+
+        airconsole.onConnect = function(device_id) {
+          checkFourPlayers();
+        };
+
+        airconsole.onDisconnect = function(device_id) {
+          var player = airconsole.convertDeviceIdToPlayerNumber(device_id);
+          if (player != undefined) {
+            // Player that was in game left the game.
+            // Setting active players to length 0.
+            airconsole.setActivePlayers(0);
+          }
+          checkFourPlayers();
+        };
+
+        airconsole.onMessage = function(device_id, data) {
+          var player = airconsole.convertDeviceIdToPlayerNumber(device_id);
+          if (player != undefined && data.move !== undefined) {
+            paddles[player].move.y = data.move;
+          }
+        };
+
+    }
+
+ 	/**
+       * Checks if four players are connected!
+       */
+      function checkFourPlayers() {
+        var active_players = airconsole.getActivePlayerDeviceIds();
+	console.log(active_players);
+        var connected_controllers = airconsole.getControllerDeviceIds();
+        // Only update if the game didn't have active players.
+        if (active_players.length == 0) {
+          if (connected_controllers.length == 4) {
+            // Enough controller devices connected to start the game.
+            // Setting the first 2 controllers to active players.
+            airconsole.setActivePlayers(4);
+            document.getElementById("wait").innerHTML = "";
+          } else if (connected_controllers.length == 3) {
+            document.getElementById("wait").innerHTML = "Need 1 more player!";
+	  } else if (connected_controllers.length == 2) {
+            document.getElementById("wait").innerHTML = "Need 2 more player!";
+	  } else if (connected_controllers.length == 1) {
+            document.getElementById("wait").innerHTML = "Need 3 more player!";
+          } else if (connected_controllers.length == 0) {
+            document.getElementById("wait").innerHTML = "Need 4 more players!";
+	  }
+        }
+      }
+
+
+function getPlayer(){
+	return player;
+}
+
+function setPlayer(){
+	if(player >= 4){
+		player = 1;
+	}
+	else {
+		player++;
+	}
+	var colorTurn = "Blue";
+	if(player == 2) colorTurn = "Green";
+	else if(player == 3) colorTurn = "Red";
+	else if(player == 4) colorTurn = "yellow"
+	document.getElementById("turn").innerHTML = "Player Turn: " + colorTurn;
+	return;
+}
+
+window.onload = function main() {
+	canvas = document.createElement("canvas");
+	canvas.width = canvas.height = 580;
+	context = canvas.getContext("2d");
+
+	document.body.appendChild(canvas);
+	canvas.addEventListener("mousedown", mouseDown);
+
+	init();
+	tick();
+}
+function init() {
+	setupConsole();
+
+	if(data == null){
+		data = [];
+		//render the empty edges of the board
+		for (var i = 0; i < 78; i++){
+			var x;
+			var y;
+			if(i<19){ //top
+				y = 10;
+				x = ((i%19)*30) + 10;
+			}
+			else if (i < 37){ //left
+				x = 10;
+				y = ((i%19)*30)+10;
+				}
+			else if (i < 56){ //right
+				x = 550;				
+				y = ((i%19)*30)+10;
+			}
+			else{
+				y = 550; //bottom
+				x = ((i%19)*30) + 10;
+			}
+			data.push(new Space(x, y, "grey"));
+		}
+
+		data.push(new Space(100, 520, "grey"));
+		data.push(new Space(100, 490, "grey"));
+		data.push(new Space(100, 460, "grey"));
+		data.push(new Space(70, 460, "grey"));
+		data.push(new Space(70, 430, "grey"));
+
+		data.push(new Space(520, 460, "grey"));
+		data.push(new Space(490, 460, "grey"));
+		data.push(new Space(460, 460, "grey"));
+		data.push(new Space(460, 490, "grey"));
+		data.push(new Space(430, 490, "grey"));
+
+		data.push(new Space(460, 40, "grey"));
+		data.push(new Space(460, 70, "grey"));
+		data.push(new Space(460, 100, "grey"));
+		data.push(new Space(490, 100, "grey"));
+		data.push(new Space(490, 130, "grey"));
+
+		data.push(new Space(40, 100, "grey"));
+		data.push(new Space(70, 100, "grey"));
+		data.push(new Space(100, 100, "grey"));
+		data.push(new Space(100, 70, "grey"));
+		data.push(new Space(130, 70, "grey"));
+		
+		playerBlue = [];		
+
+			y = ((8%18)*30) + 10;
+			x = 40;
+			playerBlue.push(new Space(x, y, "blueMarble.png"));
+
+			
+			y = ((8%18)*30) + 10;
+			x = 70;
+			playerBlue.push(new Space(x, y, "blueMarble.png"));
+	
+	
+			y = ((8%18)*30) + 10;
+			x = 100;
+			playerBlue.push(new Space(x, y, "blueMarble.png"));
+
+			y = ((7%18)*30) + 10;
+			x = 70;
+			playerBlue.push(new Space(x, y, "blueMarble.png"));
+
+			y = ((9%18)*30) + 10;
+			x = 70;
+			playerBlue.push(new Space(x, y, "blueMarble.png"));
+
+			
+		playerGreen = [];		
+
+			x = ((10%18)*30) + 10;
+			y = 40;
+			playerGreen.push(new Space(x, y, "greenMarble.png"));
+
+			
+			x = ((10%18)*30) + 10;
+			y = 70;
+			playerGreen.push(new Space(x, y, "greenMarble.png"));
+	
+	
+			x = ((10%18)*30) + 10;
+			y = 100;
+			playerGreen.push(new Space(x, y, "greenMarble.png"));
+
+			x = ((9%18)*30) + 10;
+			y = 70;
+			playerGreen.push(new Space(x, y, "greenMarble.png"));
+
+			x = ((11%18)*30) + 10;
+			y = 70;
+			playerGreen.push(new Space(x, y, "greenMarble.png"));
+
+		playerRed = [];		
+
+			y = ((10%18)*30) + 10;
+			x = 580-60;
+			playerRed.push(new Space(x, y, "redMarble.png"));
+
+			
+			y = ((10%18)*30) + 10;
+			x = 580-90;
+			playerRed.push(new Space(x, y, "redMarble.png"));
+	
+	
+			y = ((10%18)*30) + 10;
+			x = 580-120;
+			playerRed.push(new Space(x, y, "redMarble.png"));
+
+			y = ((9%18)*30) + 10;
+			x = 580-90;
+			playerRed.push(new Space(x, y, "redMarble.png"));
+
+			y = ((11%18)*30) + 10;
+			x = 580-90;
+			playerRed.push(new Space(x, y, "redMarble.png"));
+
+			
+		playerYellow = [];		
+
+			x = ((8%18)*30) + 10;
+			y = 580-60;
+			playerYellow.push(new Space(x, y, "yellowMarble.png"));
+
+			
+			x = ((8%18)*30) + 10;
+			y = 580-90;
+			playerYellow.push(new Space(x, y, "yellowMarble.png"));
+	
+	
+			x = ((8%18)*30) + 10;
+			y = 580-120;
+			playerYellow.push(new Space(x, y, "yellowMarble.png"));
+
+			x = ((7%18)*30) + 10;
+			y =  580-90;
+			playerYellow.push(new Space(x, y, "yellowMarble.png"));
+
+			x = ((9%18)*30) + 10;
+			y =  580-90;
+			playerYellow.push(new Space(x, y, "yellowMarble.png"));
+	
+	occupiedSpaces.push(playerBlue);
+	occupiedSpaces.push(playerGreen);
+	occupiedSpaces.push(playerRed);
+	occupiedSpaces.push(playerYellow);
+	}
+}
+function tick() {
+	window.requestAnimationFrame(tick);
+	
+	update();
+	render();	
+}
+function update() {
+	for (var i = data.length; i--;){
+		data[i].update();
+	}
+	for(var j = playerBlue.length; j--;){
+		playerBlue[j].update();
+		playerGreen[j].update();
+		playerYellow[j].update();
+		playerRed[j].update();
+		
+	}
+}
+function render() {
+	context.clearRect(0,0,canvas.width, canvas.height);
+	for(var i = data.length; i--;){
+		data[i].draw(context);
+	}
+	for(var j = playerBlue.length; j--;){
+		playerBlue[j].draw(context);
+		playerGreen[j].draw(context);
+		playerYellow[j].draw(context);
+		playerRed[j].draw(context);
+	}
+
+}
+
+
+
+function checkSpace(x, y){			//checkSpace will take the space the marble is going to and see if it is occupied. 
+						//If occupied, it will return the Space object which is occupying it.
+	for (var j = 0; j < 4; j++){
+		for (var i = 0; i < 5; i++){
+			if(occupiedSpaces[j][i].getx() == x){
+				if(occupiedSpaces[j][i].gety() == y){
+					console.log("occupied space");
+					console.log(x + ", " + y);
+					return occupiedSpaces[j][i];
+				}
+			}
+		}
+	}
+	return null;
+
+}
+
+function sendHome(x, y, col){ //Blue | Green | Red | Yellow
+	console.log("sendHome called");
+		if(col == "blueMarble.png"){
+			for (var i = 0; i < 5; i++){
+				if(playerBlue[i].getx() == x){
+					if(playerBlue[i].gety() == y){
+						var xnew = 40;
+						var ynew = 40;
+						if(i == 0){
+							ynew = ((8%18)*30) + 10;
+							xnew = 40;
+						}
+						else if(i == 1){
+							ynew = ((8%18)*30) + 10;
+							xnew = 70;
+						}
+						else if(i == 2){
+							ynew = ((8%18)*30) + 10;
+							xnew = 100;
+						}
+						else if(i == 3){
+							ynew = ((7%18)*30) + 10;
+							xnew = 70;
+						}
+						else if(i == 4){
+							ynew = ((9%18)*30) + 10;
+							xnew = 70;
+						}
+						//console.log(xnew + " ," +ynew+"it hit here");
+						playerBlue[i] = new Space(xnew, ynew, "blueMarble.png");
+					}
+				}
+			}
+			console.log(xnew + " ," +ynew+"it hit here");
+			
+		}
+		else if(col == "greenMarble.png"){
+			for (var i = 0; i < 5; i++){ 
+				if(playerGreen[i].getx() == x){
+					if(playerGreen[i].gety() == y){
+						var xnew = 40;
+						var ynew = 40;
+						if(i == 0){
+							xnew = ((10%18)*30) + 10;
+							ynew = 40;
+						}
+						else if(i == 1){
+							xnew = ((10%18)*30) + 10;
+							ynew = 70;
+						}
+						else if (i == 2){
+							xnew = ((10%18)*30) + 10;
+							ynew = 100;
+						}
+						else if (i == 3){
+							xnew = ((9%18)*30) + 10;
+							ynew = 70;
+						}
+						else if (i == 4){
+							xnew = ((11%18)*30) + 10;
+							ynew = 70;
+						}
+						playerGreen[i] = new Space(xnew,ynew,"greenMarble.png");
+						}	
+					}
+				}
+			}
+		else if(col == "redMarble.png"){
+			for (var i = 0; i < 5; i++){
+				if(playerRed[i].getx() == x){
+					if(playerRed[i].gety() == y){
+						var xnew = 40;
+						var ynew = 40;
+						if(i == 0){
+							ynew = ((10%18)*30) + 10;
+							xnew = 580-60;
+						}
+						else if(i == 1){
+							ynew = ((10%18)*30) + 10;
+							xnew =  580-90;
+						}
+						else if (i == 2){
+							ynew = ((10%18)*30) + 10;
+							xnew =  580-120;
+						}
+						else if (i == 3){
+							ynew = ((9%18)*30) + 10;
+							xnew = 580-90;
+						}
+						else if (i == 4){
+							ynew = ((11%18)*30) + 10;
+							xnew = 580-90;
+						}
+						playerRed[i] = new Space(xnew,ynew,"redMarble.png");
+						}	
+					}
+				}
+			}
+		
+		else if(col == "yellowMarble.png"){
+			for (var i = 0; i < 5; i++){
+				if(playerYellow[i].getx() == x){
+					if(playerYellow[i].gety() == y){
+						var xnew = 40;
+						var ynew = 40;
+						if(i == 0){
+							xnew = ((8%18)*30) + 10;
+							ynew = 580-60;
+						}
+						else if(i == 1){
+							xnew = ((8%18)*30) + 10;
+							ynew =  580-90;
+						}
+						else if (i == 2){
+							xnew = ((8%18)*30) + 10;
+							ynew =  580-120;
+						}
+						else if (i == 3){
+							xnew = ((7%18)*30) + 10;
+							ynew = 580-90;
+						}
+						else if (i == 4){
+							xnew = ((9%18)*30) + 10;
+							ynew = 580-90;
+						}
+						playerYellow[i] = new Space(xnew,ynew,"yellowMarble.png");
+						}	
+					}
+				}
+			}
+		
+
+}
+
+function fromHome(i, tempx, tempy, col, player, homex, homey){  //This function must be generalized to fit the other players. At that point, play can be implemented by all 4 players, and the game will be almost playable with a deck of cards.
+	var goingTo = checkSpace(homex,homey);
+					if(goingTo){
+						if(goingTo.getcolor() == col){
+							console.log("own marble");
+						}
+						else{
+							sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+					}
+					else if(col == "blueMarble.png"){
+					
+						if(tempx == 70 && tempy == (8*30+10)){ //next 5 are if the marbles are home.
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == 40 && tempy == (8*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == 100 && tempy == (8*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == 70 && tempy == (7*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == 70 && tempy == (9*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+					}
+					else if (col == "greenMarble.png"){				
+						if(tempx ==  (10*30)+10 && tempy == 40){ //next 5 are if the marbles are home.
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (10*30)+10 && tempy == 70){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (10*30)+10 && tempy == 100){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (9*30)+10 && tempy == 70){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (11*30)+10 && tempy == 70){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+					}
+					else if (col == "redMarble.png"){
+						if(tempx == (580-60) && tempy == (10*30+10)){ //next 5 are if the marbles are home.
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (580-90) && tempy == (10*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (580-120) && tempy == (10*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (580-90) && tempy == (9*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (580-90) && tempy == (11*30+10)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+					}
+					else if (col == "yellowMarble.png"){
+						if(tempx == (8*30)+10 && tempy == (580-60)){ //next 5 are if the marbles are home.
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (8*30)+10 && tempy == (580-90)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (8*30)+10 && tempy == (580-120)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (7*30)+10 && tempy == (580-90)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+						else if(tempx == (9*30)+10 && tempy == (580-90)){
+							player[i] = new Space(homex,homey,col);
+							//setPlayer();
+						}
+					}
+}
+
+function isAtFinish(tempx, tempy, col){
+	if (col == "blueMarble.png"){
+		if(tempx == 10 && tempy == 100){
+			return true;
+		}
+	}
+	else if(col == "greenMarble.png"){
+		if(tempx == (550-90) && tempy == 10){
+			return true;
+		}
+	}
+	else if(col == "redMarble.png"){
+		if(tempx == (550) && tempy == (550 - 90)){
+			return true;
+		}
+	}
+	else if(col == "yellowMarble.png"){
+		if(tempx == 100 && tempy == (550)){
+			return true;
+		}
+	}
+	else{
+		return false;
+	}
+
+}
+
+function finish(tempx, tempy, i, player, col, isFinalSpot){
+	if (col == "blueMarble.png"){
+		if(tempx == 10 && tempy == 100){
+			var goingTo = checkSpace(40,100,col);
+			player[i] = new Space(40, 100, "blueMarble.png");
+		}
+	}
+	else if(col == "greenMarble.png"){
+		if(tempx == (550-90) && tempy == 10){
+			var goingTo = checkSpace(460,10,col);
+			player[i] = new Space(550-90, 40, "greenMarble.png");
+		}
+	}
+	else if(col == "redMarble.png"){
+		if(tempx == (550) && tempy == (460)){
+			var goingTo = checkSpace(550,460,col);
+			player[i] = new Space((550-30),460,"redMarble.png");
+		}
+	}
+	else if(col == "yellowMarble.png"){
+		if(tempx == 100 && tempy == (550)){
+			var goingTo = checkSpace(100,550,col);
+			player[i] = new Space(100, (550-30), "yellowMarble.png");
+		}
+	}
+}
+
+function play(tempx, tempy, i, player, col, isFinalSpot){
+	{
+		var coord = [];
+			player[i].makeEmpty();
+			if(isAtFinish(tempx, tempy, col) == true){
+				finish(tempx, tempy, i, player, col, isFinalSpot);	
+			}
+			else{
+				if(tempx == 10 && tempy == 10){  //Top Left corner
+						var goingTo = checkSpace(10, tempy+(30));
+					if(goingTo == null){
+						player[i] = new Space(10,(tempy+(30)),col); // Augmenting (tempy+(x * 30)) will move you x spaces up.
+						coord.push(10);
+						coord.push(tempy+30);
+						//setPlayer();
+					}
+					else{
+						if(goingTo.getcolor() ==col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space(10,(tempy+(30)),col);
+							coord.push(10);
+							coord.push(tempy+30);
+							//setPlayer();
+						}
+					}
+				}
+				else if(tempx == 10 && tempy == 550){ // Top Right Corner
+						var goingTo = checkSpace(tempx+30, 550);
+					if(goingTo == null){
+						player[i] = new Space((tempx+30),550,col);
+						coord.push(tempx+30);
+						coord.push(550);
+						//setPlayer();
+					}
+					else {
+						if(goingTo.getcolor() == col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space((tempx+30),550,col);
+							coord.push(tempx+30);
+							coord.push(550);
+							//setPlayer();
+						}
+					}
+				}
+				else if (tempx == 550 && tempy == 550){ //Bottom Right Corner
+					var goingTo = checkSpace(550, tempy-30);
+					if(goingTo == null){
+						player[i] = new Space(550,tempy-30,col);
+						coord.push(550);
+						coord.push(tempy-30);
+						//setPlayer();
+					}
+					else{
+						if(goingTo.getcolor() ==col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space(550, (tempy-30), col);
+							coord.push(550);
+							coord.push(tempy-30);
+							//setPlayer();
+						}
+					}
+				}
+				else if(tempx == 10 && tempy == 550){ // Bottom Left Corner
+					var goingTo = checkSpace(550, tempy-30);
+					if(goingTo == null){
+						player[i] = new Space(550,tempy-30,col);
+						coord.push(550);
+						coord.push(tempy-30);
+						//setPlayer();
+					}
+					else{
+						if(goingTo.getcolor() ==col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space(550, (tempy-30), col);
+							coord.push(550);
+							coord.push(tempy-30);
+							//setPlayer();
+						}
+					}
+				}
+				else if(tempx <= 550 && tempy == 10){		//Moving around the board
+					var goingTo = checkSpace(tempx-30, 10);
+						if(goingTo == null){
+							player[i] = new Space((tempx-30),10,col);
+							coord.push(tempx-30);
+							coord.push(10);
+							//setPlayer();
+						}
+						else {
+						
+							if (goingTo.getcolor() == col){ //Attempting to run into your own marble.
+								console.log("own marble");
+								sendHome(player[i].getx(), player[i].gety(), player[i].getcolor()); //sends you home :)
+							}	
+							else{  // Two marbles of different teams collide. 
+								if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+								player[i] = new Space((tempx-30),10,col);
+								coord.push(tempx-30);
+								coord.push(10);
+								//setPlayer();
+							}
+						}
+					
+					
+				}
+				else if(tempy <= 550 && tempx == 550){
+					var goingTo = checkSpace(550, tempy-30);
+					if(goingTo == null){
+						player[i] = new Space(550,tempy-30,col);
+						coord.push(550);
+						coord.push(tempy-30);
+						//setPlayer();
+					}
+					else{
+						if(goingTo.getcolor() ==col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space(550, (tempy-30), col);
+							//setPlayer();
+							coord.push(550);
+							coord.push(tempy-30);
+						}
+					}
+					
+				
+				}
+				else if (tempx >= 10 && tempy == 550){
+					var goingTo = checkSpace(tempx+30, 550);
+					if(goingTo == null){
+						player[i] = new Space((tempx+30),550,col);
+						coord.push(tempx+30);
+						coord.push(550);
+						//setPlayer();
+					}
+					else {
+						if(goingTo.getcolor() == col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space((tempx+30),550,col);
+							coord.push(tempx+30);
+							coord.push(550);
+							//setPlayer();
+						}
+					}
+				}
+				else if (tempy >= 10 && tempx == 10){
+					var goingTo = checkSpace(10, tempy+(30));
+					if(goingTo == null){
+						player[i] = new Space(10,(tempy+(30)),col); // Augmenting (tempy+(x * 30)) will move you x spaces up.
+						coord.push(10);
+						coord.push(tempy+30);
+						//setPlayer();
+					}
+					else{
+						if(goingTo.getcolor() ==col){
+							console.log("own marble");
+							sendHome(player[i].getx(), player[i].gety(), player[i].getcolor());
+						}
+						else{
+							if(isFinalSpot == true){sendHome(goingTo.getx(), goingTo.gety(), goingTo.getcolor());}
+							player[i] = new Space(10,(tempy+(30)),col);
+							//setPlayer();
+							coord.push(10);
+							coord.push(tempy+30);
+						}
+					}
+			
+				}
+				else {
+					if(col == "blueMarble.png"){
+						var homex = 10;
+						var homey = (8*30)+10;
+						fromHome(i, tempx, tempy, col, player, homex, homey);
+					}
+					else if(col == "greenMarble.png"){
+						var homex = (10*30)+10;
+						var homey = 10;
+						fromHome(i, tempx, tempy, col, player, homex, homey);
+					}
+					else if(col == "redMarble.png"){
+						var homex = 550;
+						var homey = (10*30)+10;
+						fromHome(i, tempx, tempy, col, player, homex, homey);
+					}
+					else if(col == "yellowMarble.png"){
+						var homex = (8*30)+10;
+						var homey = 550;
+						fromHome(i, tempx, tempy, col, player, homex, homey);
+					}
+				}
+				console.log(player[i].getx() + "," + player[i].gety());
+		}
+	}
+	return coord;
+}
+//I need a way to keep track of turns. Ended up making each player turn a seperate function. Now to figure out how to specify how many moves the marble should
+//make in a turn, or perhaps to fix the bug where colliding marble dissappear. Now that blue is fully functional and correctly landing on opponents
+//and not landing on itself, I'm trying to consolidate the function so that it's usable for the other three players.
+function player1(px, py){
+	for(var i = playerBlue.length; i--;){
+		if(px > playerBlue[i].getx() && px < playerBlue[i].getx()+30){
+			if(py>playerBlue[i].gety() && py < playerBlue[i].gety()+30){
+				var tempx = playerBlue[i].getx();
+				var tempy = playerBlue[i].gety();
+				var n = prompt("Enter number of spaces:");
+				var isFinalSpot = false;
+				for (var j = 0; j < n; j++){
+					if(j == (n-1)){isFinalSpot = true;}
+					var co = play(tempx, tempy, i, playerBlue,"blueMarble.png", isFinalSpot);
+					tempy = co.pop();
+					tempx = co.pop();
+				}
+				setPlayer();
+			}
+		}
+	}
+}
+
+function player2(px, py){
+	for(var i = playerGreen.length; i--;){
+		 if(px > playerGreen[i].getx() && px < playerGreen[i].getx()+30){
+			if(py>playerGreen[i].gety() && py < playerGreen[i].gety()+30){
+				var tempx = playerGreen[i].getx();
+				var tempy = playerGreen[i].gety();
+				var player = playerGreen;
+				var col = "greenMarble.png";
+				var n = prompt("Enter number of spaces");
+				var isFinalSpot = false;
+				for(var j = 0; j < n; j++){
+					if(j == (n-1)){isFinalSpot = true;}
+					var co = play(tempx, tempy, i, player, col, isFinalSpot);
+					tempy = co.pop();
+					tempx = co.pop();
+				}
+				setPlayer();
+			}
+		}
+	}
+}
+
+function player3(px, py){
+	for(var i = playerRed.length; i--;){
+		 if(px > playerRed[i].getx() && px < playerRed[i].getx()+30){
+			if(py>playerRed[i].gety() && py < playerRed[i].gety()+30){
+				var tempx = playerRed[i].getx();
+				var tempy = playerRed[i].gety();
+				var player = playerRed;
+				var col = "redMarble.png";
+				var n = prompt("Enter number of spaces");
+				var isFinalSpot = false;
+				for(var j = 0; j < n; j++){
+					if(j == (n-1)){isFinalSpot = true;}
+					var co = play(tempx, tempy, i, player, col, isFinalSpot);
+					tempy = co.pop();
+					tempx = co.pop();
+				}
+				setPlayer();
+			}
+		}
+	}
+}
+
+function player4(px, py){
+	for(var i = playerYellow.length; i--;){
+	 	if(px > playerYellow[i].getx() && px < playerYellow[i].getx()+30){
+			if(py>playerYellow[i].gety() && py < playerYellow[i].gety()+30){
+				var tempx = playerYellow[i].getx();
+				var tempy = playerYellow[i].gety();
+				var player = playerYellow;
+				var col = "yellowMarble.png";
+				var n = prompt("Enter number of spaces");
+				var isFinalSpot = false;
+				for(var j = 0; j < n; j++){
+					if(j == (n-1)){isFinalSpot = true;}
+					var co = play(tempx, tempy, i, player, col, isFinalSpot);
+					tempy = co.pop();
+					tempx = co.pop();
+				}
+				setPlayer();
+			}
+		}
+	}
+}
+function mouseDown(event) {
+	var player = getPlayer();
+	console.log(player);
+
+	var el = event.target;
+	var px = event.clientX - el.offsetLeft;
+	var py = event.clientY - el.offsetTop;
+
+		if (player == 1){
+			player1(px, py);
+		}
+		else if (player == 2){
+			player2(px, py);
+		}
+		else if (player == 3){
+			player3(px, py);
+		}
+		else if (player == 4){
+			player4(px, py);
+		}
+
+	
+	update();
+	render();
+
+
+
+}
+function Player(color, marbles){
+
+}
+
+function marbles(x, y){
+
+}
+
+function Space(x, y, color) {
+	var x = x, y = y;
+	var empty = false;
+	var space = Space.BLUE;
+	if(space == null){
+		var _c = document.createElement("canvas");
+		_c.width = _c. height = 20;
+		_context = _c.getContext("2d");
+		//_context.fillStyle = color;
+		_context.fillRect(0,0,20,20);
+		//BLANK
+		Space.BLANK = new Image();
+		//Space.BLANK.src = _c.toDataURL();
+		Space.BLANK.src = ("blankspace.png");
+		//FILLED
+
+		if(color == "grey"){
+			space = Space.BLANK;
+			empty = true;
+		}
+		else{
+		Space.FILLED = new Image();
+		Space.FILLED.src = color;
+		space = Space.FILLED	
+		}	
+	}
+
+	this.getx = function(){
+		return x;
+	}
+
+	this.gety = function(){
+		return y;
+	}
+
+	this.getcolor = function(){
+		return color;
+	}
+
+	this.isEmpty = function(){
+		return empty;
+	}
+
+	this.makeEmpty = function(){
+		//space = Space.BLANK;
+		//context.drawImage(space,x,y);
+		data.push(new Space(x, y, "grey"));
+		empty = true;
+	}
+
+	this.update = function(){
+
+	}
+	this.draw = function(context){
+		context.drawImage(space, x, y);
+	}
+}
+</script>
+</head>
+<body>
+	<h1 id = "turn">Player Blue Starts!</h1>	
+</body>
+</html>

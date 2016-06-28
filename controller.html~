@@ -58,7 +58,7 @@
       font-family: 'PressStart2P', sans-serif;
       color: white;
       text-align: center;
-      background-color: black;
+      background-color: 222222;
     }
 
     .button {
@@ -80,7 +80,9 @@
 	height: auto;
     }
     
-
+    h1{
+	color:white;
+    }
 
     #player_id {
       position: absolute;
@@ -95,29 +97,30 @@
 <body onload="init()">
 <div style="height: 1%"></div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\Jerry's Nugget blue\Clubs 5.png"></img></div>
+	<div class="button_label1"><img src="Jerry's Nugget blue\Clubs 5.png"></img></div>
 </div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\Jerry's Nugget blue\Clubs 11.png"></img></div>
+	<div class="button_label1"><img src="Jerry's Nugget blue\Clubs 11.png"></img></div>
 </div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\Jerry's Nugget blue\Clubs 1.png"></img></div>
+	<div class="button_label1"><img src="Jerry's Nugget blue\Clubs 1.png"></img></div>
 </div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\Jerry's Nugget blue\Hearts 11.png"></img></div>
+	<div class="button_label1"><img src="Jerry's Nugget blue\Hearts 11.png"></img></div>
 </div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\Jerry's Nugget blue\Diamonds 13.png"></img></div>
+	<div class="button_label1"><img src="Jerry's Nugget blue\Diamonds 13.png"></img></div>
 </div>
 <div style="height: 10%"></div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\left arrow.png"></img></div>
+	<div class="button_label1"><img src="redgradientleft.png"></img></div>
 </div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\selectButton.png"></img></div>
+	<div class="button_label1"><img src="center.png"></img></div>
 </div>
 <div class=button ontouchstart="move(-50)" ontouchend="move(0)" onmousedown="move(-50)" onmouseup="move(0)">
-	<div class="button_label1"><img src="C:\Users\Dave\Downloads\School\CS\webapps\games-pong-master\games-pong-master\Controller\right arrow.png"></img></div>
+	<div class="button_label1"><img src="redgradient.png"></img></div>
 </div>
+<h1> Player: 1 </h1>
 </body>
 </html>
